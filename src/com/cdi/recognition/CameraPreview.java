@@ -1,11 +1,25 @@
 package com.cdi.recognition;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
+
+import org.json.JSONObject;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
@@ -14,6 +28,7 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.Toast;
 
 import com.faceplusplus.api.FaceDetecter;
 import com.faceplusplus.api.FaceDetecter.Face;
@@ -32,6 +47,7 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
     private int height = 240;
     FaceDetecter facedetecter = null;
     HttpRequests request = null;
+
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,12 +126,13 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
     }
 
     @Override
-    public void onPreviewFrame(final byte[] data, Camera camera) {
+    public void onPreviewFrame(final byte[] data, Camera camera) {    	
         camera.setPreviewCallback(null);
         detectHandler.post(new Runnable() {
 
             @Override
             public void run() {
+
                 byte[] ori = new byte[width * height];
                 int is = 0;
                 for (int x = width - 1; x >= 0; x--) {
@@ -128,18 +145,57 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
                     }
 
                 }
-                final Face[] faceinfo = facedetecter.findFaces( ori, height,
-                        width);
-
+                final Face[] faceinfo = facedetecter.findFaces(ori, height, width);
+            	
                 if(faceinfo != null) {
-	                try {
-						request.offlineDetect(facedetecter.getImageByteArray(), 
-											  facedetecter.getResultJsonString(), 
-											  new PostParameters());
-					} catch (Exception e) {
+//                	byte[] imgByteArray = facedetecter.getImageByteArray();
+//                    String resultJsonString = facedetecter.getResultJsonString();
+//                    Log.d("result",	resultJsonString);
+//                    
+//	                try {
+//						JSONObject result = request.offlineDetect(imgByteArray, 
+//											  resultJsonString, 
+//											  new PostParameters());
+//						
+//						Iterator it = result.keys();
+//						while(it.hasNext()) {
+//							String key = (String)it.next();
+////							String value = result.getString(key);
+//							Toast.makeText(CameraPreview.this, key, Toast.LENGTH_SHORT).show();
+//						}
+//					} catch (FaceppParseException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+                	
+                	final YuvImage image = new YuvImage(data, ImageFormat.NV21, width, height, null);
+                	ByteArrayOutputStream os = new ByteArrayOutputStream(data.length);
+                	image.compressToJpeg(new Rect(0, 0, width, height), 100, os);
+                	byte[] tmp = os.toByteArray();
+                	Bitmap bmp = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
+                	
+                	File f = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/tmp.jpg");
+                	try {
+						f.createNewFile();
+					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+                	BufferedOutputStream bos;
+                	try {
+						bos = new BufferedOutputStream(new FileOutputStream(f));
+						bmp.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+						bos.flush();
+						bos.close();
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                	
+                	
                 }
                 
                 runOnUiThread(new Runnable() {
@@ -148,7 +204,7 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
                         mask.setFaceInfo(faceinfo);
                     }
                 });
-                CameraPreview.this.camera.setPreviewCallback(CameraPreview.this);
+                CameraPreview.this.camera.setOneShotPreviewCallback(CameraPreview.this);
             }
         });
     }
