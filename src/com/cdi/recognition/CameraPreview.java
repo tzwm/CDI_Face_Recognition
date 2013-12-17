@@ -30,6 +30,7 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.Toast;
 
+import com.cdi.recognition.util.FaceAPIHandler;
 import com.faceplusplus.api.FaceDetecter;
 import com.faceplusplus.api.FaceDetecter.Face;
 import com.facepp.error.FaceppParseException;
@@ -72,7 +73,7 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
         facedetecter.setTrackingMode(true);
         
         request = new HttpRequests("508423ba8aa6772014c2bf677f578437",
-                "m4m12wFJdmcoZRfRkFLkSKcuaayuYf3Tl");
+                "m4m12wFJdmcoZRfRkFLkSKcuaayuYf3T", true, true);
         
     }
 
@@ -126,7 +127,15 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
     }
 
     @Override
-    public void onPreviewFrame(final byte[] data, Camera camera) {    	
+    public void onPreviewFrame(final byte[] data, Camera camera) {   
+    	FaceAPIHandler fah = new FaceAPIHandler();
+    	try {
+			fah.detection_detect();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	
         camera.setPreviewCallback(null);
         detectHandler.post(new Runnable() {
 
@@ -195,7 +204,19 @@ public class CameraPreview extends Activity implements Callback, PreviewCallback
 						e.printStackTrace();
 					}
                 	
-                	
+                	try {	
+						JSONObject result = request.detectionDetect(new PostParameters().setUrl(f.getAbsolutePath()));
+						Iterator it = result.keys();
+						while(it.hasNext()) {
+							String key = (String)it.next();
+//							String value = result.getString(key);
+							Log.d("key", key);
+							Toast.makeText(CameraPreview.this, key, Toast.LENGTH_SHORT).show();
+						}
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
                 }
                 
                 runOnUiThread(new Runnable() {
