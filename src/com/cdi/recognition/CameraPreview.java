@@ -20,10 +20,13 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -137,10 +140,29 @@ public class CameraPreview extends Activity implements Callback,
 								}
 							});
 							
+							String url = "http://translate.google.com/translate_tts?ie=utf-8&tl=en&q=";
+							MediaPlayer mp = new MediaPlayer();
+							mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+							mp.setDataSource(url + "Hello+" + person_name);
+							mp.prepare();
+							mp.start();
+							
 						} catch (FaceppParseException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IllegalArgumentException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (SecurityException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IllegalStateException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
@@ -162,6 +184,9 @@ public class CameraPreview extends Activity implements Callback,
 					
 					@Override
 					public void run() {
+						Looper.prepare();
+						Looper.myLooper().loop();
+						
 						// TODO Auto-generated method stub
 						saveImg(frameData);
 						try {
@@ -212,6 +237,8 @@ public class CameraPreview extends Activity implements Callback,
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						
+						Toast.makeText(CameraPreview.this, "Success!", Toast.LENGTH_SHORT).show();
 					}
 				};
 				new Thread(uploadRun).start();
