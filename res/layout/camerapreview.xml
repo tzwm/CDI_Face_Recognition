@@ -12,7 +12,34 @@
     <com.cdi.recognition.FaceMask
         android:id="@+id/mask"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" >
-    </com.cdi.recognition.FaceMask>
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" />
 
+    <Button
+        android:id="@+id/detect_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="识别" />
+
+    <Button
+        android:id="@+id/upload_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="提交" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/upload_btn"
+        android:layout_alignBottom="@+id/upload_btn"
+        android:layout_toRightOf="@+id/upload_btn"
+        android:text="name"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
 </RelativeLayout>
