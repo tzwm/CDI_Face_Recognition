@@ -32,7 +32,7 @@
         android:layout_alignBottom="@+id/detect_btn"
         android:layout_alignParentLeft="true"
         android:enabled="true"
-        android:text="name"
+        android:text="tzwm"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <Button

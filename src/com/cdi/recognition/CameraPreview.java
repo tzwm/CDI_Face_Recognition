@@ -59,6 +59,7 @@ public class CameraPreview extends Activity implements Callback,
 			.getAbsolutePath() + "/CDI_Face/tmp.jpg";
 	Button detect_btn, upload_btn;
 	String face_id;
+	String group_name, person_name, confidence;
 	
 	private EditText io_text;
 
@@ -87,9 +88,68 @@ public class CameraPreview extends Activity implements Callback,
 		request = new HttpRequests("508423ba8aa6772014c2bf677f578437",
 				"m4m12wFJdmcoZRfRkFLkSKcuaayuYf3T", true, true);
 
+		group_name = "test";
 		io_text = (EditText)findViewById(R.id.name);
 		detect_btn = (Button) findViewById(R.id.detect_btn);
 		upload_btn = (Button) findViewById(R.id.upload_btn);
+		
+		detect_btn.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Runnable uploadRun = new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						saveImg(frameData);
+						try {
+							getFaceID();
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						if(face_id.length() == 0){
+							return;
+						}
+						
+						PostParameters tmp = new PostParameters();
+						tmp.setGroupName(group_name);
+						tmp.setMode("oneface");
+						tmp.setImg(new File(fileUrl));
+						JSONObject result = null;
+						try {
+							result = request.recognitionIdentify(tmp);
+							person_name = result.getJSONArray("face").getJSONObject(0)
+												.getJSONArray("candidate").getJSONObject(0)
+												.getString("person_name");
+							confidence = result.getJSONArray("face").getJSONObject(0)
+												.getJSONArray("candidate").getJSONObject(0)
+												.getString("confidence");
+							
+							CameraPreview.this.runOnUiThread(new Runnable() {
+								
+								@Override
+								public void run() {
+									// TODO Auto-generated method stub
+									io_text.setText(person_name + ":" + confidence);
+								}
+							});
+							
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}
+				};
+				new Thread(uploadRun).start();
+			}
+		});
 
 		upload_btn.setOnClickListener(new OnClickListener() {
 
@@ -110,9 +170,47 @@ public class CameraPreview extends Activity implements Callback,
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						if(face_id.length() > 0){
-//							Toast.makeText(CameraPreview.this, String.valueOf(face_id), Toast.LENGTH_SHORT).show();
-							Log.d("face_id:", face_id);
+						if(face_id.length() == 0){
+							return;
+						}
+						JSONObject result;
+						PostParameters tmp = new PostParameters();
+						tmp.setPersonName(io_text.getText().toString());
+						try {
+							request.personCreate(tmp);							
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						tmp.setFaceId(face_id);
+						try {
+							request.personAddFace(tmp);
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						tmp = new PostParameters();
+						tmp.setGroupName(group_name);
+						try {
+							request.groupCreate(tmp);
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						tmp.setPersonName(io_text.getText().toString());
+						try {
+							request.groupAddPerson(tmp);
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						try {
+							request.trainIdentify(new PostParameters().setGroupName(group_name));
+						} catch (FaceppParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 					}
 				};
