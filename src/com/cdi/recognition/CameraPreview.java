@@ -6,11 +6,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
@@ -26,12 +31,16 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.Toast;
 
 import com.faceplusplus.api.FaceDetecter;
 import com.faceplusplus.api.FaceDetecter.Face;
+import com.facepp.error.FaceppParseException;
 import com.facepp.http.HttpRequests;
+import com.facepp.http.PostParameters;
 
 public class CameraPreview extends Activity implements Callback,
 		PreviewCallback {
@@ -45,10 +54,13 @@ public class CameraPreview extends Activity implements Callback,
 	private int height = 240;
 	FaceDetecter facedetecter = null;
 	HttpRequests request = null;
-	byte ori[];
+	byte frameData[], ori[];
 	String fileUrl = Environment.getExternalStorageDirectory()
 			.getAbsolutePath() + "/CDI_Face/tmp.jpg";
 	Button detect_btn, upload_btn;
+	String face_id;
+	
+	private EditText io_text;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,15 +87,36 @@ public class CameraPreview extends Activity implements Callback,
 		request = new HttpRequests("508423ba8aa6772014c2bf677f578437",
 				"m4m12wFJdmcoZRfRkFLkSKcuaayuYf3T", true, true);
 
+		io_text = (EditText)findViewById(R.id.name);
 		detect_btn = (Button) findViewById(R.id.detect_btn);
 		upload_btn = (Button) findViewById(R.id.upload_btn);
 
-		detect_btn.setOnClickListener(new OnClickListener() {
+		upload_btn.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
+				face_id = "";
+				
 				// TODO Auto-generated method stub
-				saveImg(ori);
+				Runnable uploadRun = new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						saveImg(frameData);
+						try {
+							getFaceID();
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						if(face_id.length() > 0){
+//							Toast.makeText(CameraPreview.this, String.valueOf(face_id), Toast.LENGTH_SHORT).show();
+							Log.d("face_id:", face_id);
+						}
+					}
+				};
+				new Thread(uploadRun).start();
 			}
 		});
 	}
@@ -148,6 +181,7 @@ public class CameraPreview extends Activity implements Callback,
 			public void run() {
 
 				ori = new byte[width * height];
+				frameData = data;
 				int is = 0;
 				for (int x = width - 1; x >= 0; x--) {
 
@@ -185,7 +219,12 @@ public class CameraPreview extends Activity implements Callback,
 		image.compressToJpeg(new Rect(0, 0, width, height), 100, os);
 		byte[] tmp = os.toByteArray();
 		Bitmap bmp = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
-
+		
+		Matrix matrix = new Matrix();
+		matrix.postScale(1f, 1f);
+		matrix.postRotate(-90);
+		bmp = Bitmap.createBitmap(bmp, 0, 0, width, height, matrix, true);
+		
 		File f = new File(fileUrl);
 		try {
 			f.createNewFile();
@@ -206,19 +245,27 @@ public class CameraPreview extends Activity implements Callback,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-//		try {
-//			JSONObject result = request.detectionDetect(new PostParameters()
-//					.setUrl(f.getAbsolutePath()));
-//			Iterator it = result.keys();
-//			while (it.hasNext()) {
-//				String key = (String) it.next();
-//				// String value = result.getString(key);
-//				Log.d("key", key);
-//			}
-//		} catch (FaceppParseException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		
 	}
+	
+	private String getFaceID() throws JSONException {
+		File f = new File(fileUrl);
+		try {
+			PostParameters tmp = new PostParameters();
+			tmp.setMode("oneface");
+			tmp.setImg(f);
+			JSONObject result = request.detectionDetect(tmp);
+			
+			face_id = result.getJSONArray("face").getJSONObject(0).getString("face_id");
+			return result.getJSONArray("face").getJSONObject(0).getString("face_id");
+			
+		} catch (FaceppParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		face_id = "";
+		return "";
+	}
+	
 }

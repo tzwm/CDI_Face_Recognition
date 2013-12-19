@@ -21,25 +21,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/upload_btn"
         android:text="识别" />
+
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/detect_btn"
+        android:layout_alignBottom="@+id/detect_btn"
+        android:layout_alignParentLeft="true"
+        android:enabled="true"
+        android:text="name"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <Button
         android:id="@+id/upload_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_alignParentRight="true"
         android:text="提交" />
-
-    <TextView
-        android:id="@+id/name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/upload_btn"
-        android:layout_alignBottom="@+id/upload_btn"
-        android:layout_toRightOf="@+id/upload_btn"
-        android:text="name"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
     
 </RelativeLayout>
