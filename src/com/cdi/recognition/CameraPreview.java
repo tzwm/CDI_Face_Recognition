@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,9 +57,9 @@ public class CameraPreview extends Activity implements Callback,
 	FaceDetecter facedetecter = null;
 	HttpRequests request = null;
 	byte frameData[], ori[];
-	String fileUrl = Environment.getExternalStorageDirectory()
+	String fileTmpUrl = Environment.getExternalStorageDirectory()
 			.getAbsolutePath() + "/CDI_Face/tmp.jpg";
-	Button detect_btn, upload_btn;
+	Button detect_btn, upload_btn, pic_detect_btn, pic_upload_btn;
 	String face_id;
 	String group_name, person_name, confidence;
 	
@@ -95,155 +94,13 @@ public class CameraPreview extends Activity implements Callback,
 		io_text = (EditText)findViewById(R.id.name);
 		detect_btn = (Button) findViewById(R.id.detect_btn);
 		upload_btn = (Button) findViewById(R.id.upload_btn);
+		pic_detect_btn = (Button) findViewById(R.id.pic_detect_btn);
+		pic_upload_btn = (Button) findViewById(R.id.pic_upload_btn);
 		
-		detect_btn.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				Runnable uploadRun = new Runnable() {
-					
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						saveImg(frameData);
-						try {
-							getFaceID();
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						if(face_id.length() == 0){
-							return;
-						}
-						
-						PostParameters tmp = new PostParameters();
-						tmp.setGroupName(group_name);
-						tmp.setMode("oneface");
-						tmp.setImg(new File(fileUrl));
-						JSONObject result = null;
-						try {
-							result = request.recognitionIdentify(tmp);
-							person_name = result.getJSONArray("face").getJSONObject(0)
-												.getJSONArray("candidate").getJSONObject(0)
-												.getString("person_name");
-							confidence = result.getJSONArray("face").getJSONObject(0)
-												.getJSONArray("candidate").getJSONObject(0)
-												.getString("confidence");
-							
-							CameraPreview.this.runOnUiThread(new Runnable() {
-								
-								@Override
-								public void run() {
-									// TODO Auto-generated method stub
-									io_text.setText(person_name + ":" + confidence);
-								}
-							});
-							
-							String url = "http://translate.google.com/translate_tts?ie=utf-8&tl=en&q=";
-							MediaPlayer mp = new MediaPlayer();
-							mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-							mp.setDataSource(url + "Hello+" + person_name);
-							mp.prepare();
-							mp.start();
-							
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IllegalArgumentException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (SecurityException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IllegalStateException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-					}
-				};
-				new Thread(uploadRun).start();
-			}
-		});
-
-		upload_btn.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				face_id = "";
-				
-				// TODO Auto-generated method stub
-				Runnable uploadRun = new Runnable() {
-					
-					@Override
-					public void run() {
-						Looper.prepare();
-						Looper.myLooper().loop();
-						
-						// TODO Auto-generated method stub
-						saveImg(frameData);
-						try {
-							getFaceID();
-						} catch (JSONException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						if(face_id.length() == 0){
-							return;
-						}
-						JSONObject result;
-						PostParameters tmp = new PostParameters();
-						tmp.setPersonName(io_text.getText().toString());
-						try {
-							request.personCreate(tmp);							
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						tmp.setFaceId(face_id);
-						try {
-							request.personAddFace(tmp);
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						tmp = new PostParameters();
-						tmp.setGroupName(group_name);
-						try {
-							request.groupCreate(tmp);
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						tmp.setPersonName(io_text.getText().toString());
-						try {
-							request.groupAddPerson(tmp);
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						try {
-							request.trainIdentify(new PostParameters().setGroupName(group_name));
-						} catch (FaceppParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						
-						Toast.makeText(CameraPreview.this, "Success!", Toast.LENGTH_SHORT).show();
-					}
-				};
-				new Thread(uploadRun).start();
-			}
-		});
+		detect_btn.setOnClickListener(detect_OCLst);
+		upload_btn.setOnClickListener(upload_OCLst);
+		pic_detect_btn.setOnClickListener(pic_detect_OCLst);
+		pic_upload_btn.setOnClickListener(pic_upload_OCLst);
 	}
 
 	@Override
@@ -350,7 +207,7 @@ public class CameraPreview extends Activity implements Callback,
 		matrix.postRotate(-90);
 		bmp = Bitmap.createBitmap(bmp, 0, 0, width, height, matrix, true);
 		
-		File f = new File(fileUrl);
+		File f = new File(fileTmpUrl);
 		try {
 			f.createNewFile();
 		} catch (IOException e) {
@@ -373,8 +230,9 @@ public class CameraPreview extends Activity implements Callback,
 		
 	}
 	
+
 	private String getFaceID() throws JSONException {
-		File f = new File(fileUrl);
+		File f = new File(fileTmpUrl);
 		try {
 			PostParameters tmp = new PostParameters();
 			tmp.setMode("oneface");
@@ -392,5 +250,176 @@ public class CameraPreview extends Activity implements Callback,
 		face_id = "";
 		return "";
 	}
+	
+	private void detect(final String fileUrl) {
+		Runnable uploadRun = new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				saveImg(frameData);
+				try {
+					getFaceID();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if(face_id.length() == 0){
+					return;
+				}
+				
+				PostParameters tmp = new PostParameters();
+				tmp.setGroupName(group_name);
+				tmp.setMode("oneface");
+				tmp.setImg(new File(fileUrl));
+				JSONObject result = null;
+				try {
+					result = request.recognitionIdentify(tmp);
+					person_name = result.getJSONArray("face").getJSONObject(0)
+										.getJSONArray("candidate").getJSONObject(0)
+										.getString("person_name");
+					confidence = result.getJSONArray("face").getJSONObject(0)
+										.getJSONArray("candidate").getJSONObject(0)
+										.getString("confidence");
+					
+					CameraPreview.this.runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							io_text.setText(person_name + ":" + confidence);
+						}
+					});
+					
+					String url = "http://translate.google.com/translate_tts?ie=utf-8&tl=en&q="; //tl=zh
+					MediaPlayer mp = new MediaPlayer();
+					mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+					mp.setDataSource(url + "Hello+" + person_name);
+					mp.prepare();
+					mp.start();
+					
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		};
+		new Thread(uploadRun).start();
+		
+	}
+	
+	private OnClickListener detect_OCLst = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			CameraPreview.this.detect(fileTmpUrl);
+		}
+	};
+	
+	private OnClickListener upload_OCLst = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			face_id = "";
+			
+			// TODO Auto-generated method stub
+			Runnable uploadRun = new Runnable() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					saveImg(frameData);
+					try {
+						getFaceID();
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if(face_id.length() == 0){
+						return;
+					}
+					JSONObject result;
+					PostParameters tmp = new PostParameters();
+					tmp.setPersonName(io_text.getText().toString());
+					try {
+						request.personCreate(tmp);							
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					tmp.setFaceId(face_id);
+					try {
+						request.personAddFace(tmp);
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					tmp = new PostParameters();
+					tmp.setGroupName(group_name);
+					try {
+						request.groupCreate(tmp);
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					tmp.setPersonName(io_text.getText().toString());
+					try {
+						request.groupAddPerson(tmp);
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					try {
+						request.trainIdentify(new PostParameters().setGroupName(group_name));
+					} catch (FaceppParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+//					Toast.makeText(CameraPreview.this, "Success!", Toast.LENGTH_SHORT).show();
+				}
+			};
+			new Thread(uploadRun).start();
+		}
+	};
+	
+	private OnClickListener pic_detect_OCLst = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			
+			
+		}
+	};
+	
+	private OnClickListener pic_upload_OCLst = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			
+		}
+	};
 	
 }
