@@ -324,6 +324,72 @@ public class CameraPreview extends Activity implements Callback,
 		
 	}
 	
+	private void upload(final String fileUrl) {
+		face_id = "";
+		
+		// TODO Auto-generated method stub
+		Runnable uploadRun = new Runnable() {
+			
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				saveImg(frameData);
+				try {
+					getFaceID();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if(face_id.length() == 0){
+					return;
+				}
+				JSONObject result;
+				PostParameters tmp = new PostParameters();
+				tmp.setPersonName(io_text.getText().toString());
+				try {
+					request.personCreate(tmp);							
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				tmp.setFaceId(face_id);
+				try {
+					request.personAddFace(tmp);
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				tmp = new PostParameters();
+				tmp.setGroupName(group_name);
+				try {
+					request.groupCreate(tmp);
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				tmp.setPersonName(io_text.getText().toString());
+				try {
+					request.groupAddPerson(tmp);
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				try {
+					request.trainIdentify(new PostParameters().setGroupName(group_name));
+				} catch (FaceppParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+//				Toast.makeText(CameraPreview.this, "Success!", Toast.LENGTH_SHORT).show();
+			}
+		};
+		new Thread(uploadRun).start();
+	}
+	
 	private OnClickListener detect_OCLst = new OnClickListener() {
 		
 		@Override
@@ -337,69 +403,7 @@ public class CameraPreview extends Activity implements Callback,
 
 		@Override
 		public void onClick(View v) {
-			face_id = "";
-			
-			// TODO Auto-generated method stub
-			Runnable uploadRun = new Runnable() {
-				
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					saveImg(frameData);
-					try {
-						getFaceID();
-					} catch (JSONException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					if(face_id.length() == 0){
-						return;
-					}
-					JSONObject result;
-					PostParameters tmp = new PostParameters();
-					tmp.setPersonName(io_text.getText().toString());
-					try {
-						request.personCreate(tmp);							
-					} catch (FaceppParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					tmp.setFaceId(face_id);
-					try {
-						request.personAddFace(tmp);
-					} catch (FaceppParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					tmp = new PostParameters();
-					tmp.setGroupName(group_name);
-					try {
-						request.groupCreate(tmp);
-					} catch (FaceppParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					tmp.setPersonName(io_text.getText().toString());
-					try {
-						request.groupAddPerson(tmp);
-					} catch (FaceppParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					try {
-						request.trainIdentify(new PostParameters().setGroupName(group_name));
-					} catch (FaceppParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-//					Toast.makeText(CameraPreview.this, "Success!", Toast.LENGTH_SHORT).show();
-				}
-			};
-			new Thread(uploadRun).start();
+			CameraPreview.this.upload(fileTmpUrl);
 		}
 	};
 	
@@ -409,7 +413,8 @@ public class CameraPreview extends Activity implements Callback,
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
 			
-			
+			String fileUrl = Environment.getExternalStorageDirectory().getAbsolutePath() + "/CDI_Face/detect.png";
+			CameraPreview.this.detect(fileUrl);
 		}
 	};
 	
@@ -419,6 +424,8 @@ public class CameraPreview extends Activity implements Callback,
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
 			
+			String fileUrl = Environment.getExternalStorageDirectory().getAbsolutePath() + "/CDI_Face/upload.png";
+			CameraPreview.this.upload(fileUrl);
 		}
 	};
 	
