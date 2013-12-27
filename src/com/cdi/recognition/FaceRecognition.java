@@ -1,7 +1,6 @@
 package com.cdi.recognition;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -144,9 +143,6 @@ public class FaceRecognition {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IllegalStateException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}

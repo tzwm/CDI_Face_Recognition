@@ -16,22 +16,21 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.view.SurfaceHolder;
-import android.view.View;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 
+import com.cdi.talk.TTS;
 import com.faceplusplus.api.FaceDetecter;
 import com.faceplusplus.api.FaceDetecter.Face;
 
@@ -51,6 +50,7 @@ public class CameraPreview extends Activity implements Callback,
 	private EditText io_text;
 	FaceRecognition faceRecognition = null;
 	String personName, personConfidence;
+	TTS tts = null;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +75,7 @@ public class CameraPreview extends Activity implements Callback,
 		facedetecter.setTrackingMode(true);
 
 		faceRecognition = new FaceRecognition(this);
+		tts = new TTS();
 		
 		io_text = (EditText)findViewById(R.id.name);
 		detect_btn = (Button) findViewById(R.id.detect_btn);
@@ -246,9 +247,11 @@ public class CameraPreview extends Activity implements Callback,
 		}
 	}
 	
-	void setPerson(final String name, final String confidence) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException {
+	void setPerson(final String name, final String confidence) {
 		personName = name;
 		personConfidence = confidence;
+		
+		tts.speech("Hello+" + name);
 		
 		runOnUiThread(new Runnable() {
 			@Override
@@ -257,13 +260,6 @@ public class CameraPreview extends Activity implements Callback,
 				io_text.setText(name + ":" + confidence);
 			}
 		});
-		
-		String url = "http://translate.google.com/translate_tts?ie=utf-8&tl=en&q="; //tl=zh
-		MediaPlayer mp = new MediaPlayer();
-		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		mp.setDataSource(url + "Hello+" + name);
-		mp.prepare();
-		mp.start();
 	}
 	
 }
