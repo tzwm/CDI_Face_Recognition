@@ -17,28 +17,20 @@
         android:layout_alignParentTop="true" />
 
     <Button
-        android:id="@+id/pic_detect_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:text="图片匹配" />
-
-    <Button
-        android:id="@+id/upload_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/pic_detect_btn"
-        android:layout_alignParentRight="true"
-        android:text="提交" />
-
-    <Button
         android:id="@+id/detect_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/upload_btn"
-        android:layout_alignBottom="@+id/upload_btn"
-        android:layout_toLeftOf="@+id/upload_btn"
+        android:layout_above="@+id/pic_identify_btn"
+        android:layout_alignParentRight="true"
+        android:text="训练" />
+
+    <Button
+        android:id="@+id/identify_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/detect_btn"
+        android:layout_alignBottom="@+id/detect_btn"
+        android:layout_toLeftOf="@+id/detect_btn"
         android:text="识别" />
 
     <EditText
@@ -56,11 +48,19 @@
     </EditText>
 
     <Button
-        android:id="@+id/pic_upload_btn"
+        android:id="@+id/pic_detect_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="图片训练" />
+
+    <Button
+        android:id="@+id/pic_identify_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/pic_detect_btn"
-        android:text="图片训练" />
+        android:text="图片识别" />
     
 </RelativeLayout>
