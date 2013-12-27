@@ -151,7 +151,7 @@ public class FaceRecognition {
 		new Thread(uploadRun).start();
 	}
 	
-	private String getFaceID(String imgUrl) throws JSONException {
+	private final String getFaceID(String imgUrl) throws JSONException {
 		File f = new File(imgUrl);
 		try {
 			PostParameters tmp = new PostParameters();

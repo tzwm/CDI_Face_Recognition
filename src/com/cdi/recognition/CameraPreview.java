@@ -251,7 +251,7 @@ public class CameraPreview extends Activity implements Callback,
 		personName = name;
 		personConfidence = confidence;
 		
-		tts.speech("Hello+" + name);
+		tts.speech("你好+hello+" + name);
 		
 		runOnUiThread(new Runnable() {
 			@Override
