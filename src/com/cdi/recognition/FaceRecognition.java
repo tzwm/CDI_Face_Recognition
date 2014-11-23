@@ -19,8 +19,8 @@ public class FaceRecognition {
 	static final String IMG_IDENTIFY_URL = Environment.getExternalStorageDirectory()
 			.getAbsolutePath() + "/CDI_Face/identify.jpg";
 	
-	static final public String API_KEY = "508423ba8aa6772014c2bf677f578437";
-	static final public String API_SECRET = "m4m12wFJdmcoZRfRkFLkSKcuaayuYf3T";
+	static final public String API_KEY = "";
+	static final public String API_SECRET = "";
 	
 	static public String GROUP_NAME = "test";
 	
